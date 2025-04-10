@@ -1,0 +1,134 @@
+package InventarioZapatos;
+
+import java.util.*;
+
+public class InventarioZapatosApp {
+
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final List<Producto> inventario = new ArrayList<>();
+
+    public static void main(String[] args) {
+        int opcion;
+        do {
+            System.out.println("\n=== MENÚ INVENTARIO ZAPATOS ===");
+            System.out.println("1. Agregar nuevo producto");
+            System.out.println("2. Registrar venta");
+            System.out.println("3. Mostrar inventario");
+            System.out.println("4. Salir");
+            System.out.print("Seleccione una opción: ");
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcion) {
+                case 1 -> agregarProducto();
+                case 2 -> registrarVenta();
+                case 3 -> mostrarInventario();
+                case 4 -> System.out.println("Saliendo del sistema. ¡Hasta luego!");
+                default -> System.out.println("Opción no válida. Intente nuevamente.");
+            }
+        } while (opcion != 4);
+    }
+
+    private static void agregarProducto() {
+        System.out.println("\n=== AGREGAR NUEVO PRODUCTO ===");
+        System.out.print("Nombre del producto: ");
+        String nombre = scanner.nextLine().trim();
+
+        System.out.print("Cantidad inicial: ");
+        int cantidad = scanner.nextInt();
+
+        System.out.print("Precio unitario: $");
+        double precio = scanner.nextDouble();
+        scanner.nextLine();
+
+        inventario.add(new Producto(nombre, cantidad, precio));
+        System.out.println("Producto agregado correctamente.");
+    }
+
+    private static void registrarVenta() {
+        System.out.println("\n=== REGISTRAR VENTA ===");
+        if (inventario.isEmpty()) {
+            System.out.println("No hay productos en inventario.");
+            return;
+        }
+
+        mostrarInventario();
+        System.out.print("Ingrese el nombre del producto vendido: ");
+        String nombreProducto = scanner.nextLine().trim();
+
+        Optional<Producto> productoOpt = inventario.stream()
+                .filter(p -> p.getNombre().equalsIgnoreCase(nombreProducto))
+                .findFirst();
+
+        if (productoOpt.isPresent()) {
+            Producto producto = productoOpt.get();
+
+            System.out.print("Cantidad vendida: ");
+            int cantidadVendida = scanner.nextInt();
+            scanner.nextLine();
+
+            if (producto.getCantidad() >= cantidadVendida) {
+                producto.vender(cantidadVendida);
+                System.out.println("Venta registrada.");
+
+                if (producto.getCantidad() == 0) {
+                    producto.duplicarInventario();
+                    System.out.println("Inventario agotado. Se duplicó la cantidad inicial para reabastecer.");
+                }
+            } else {
+                System.out.println("No hay suficiente stock para completar la venta.");
+            }
+
+        } else {
+            System.out.println("Producto no encontrado.");
+        }
+    }
+
+    private static void mostrarInventario() {
+        System.out.println("\n=== INVENTARIO ACTUAL ===");
+        if (inventario.isEmpty()) {
+            System.out.println("No hay productos en inventario.");
+            return;
+        }
+        for (Producto producto : inventario) {
+            System.out.printf("- %s | Stock: %d | Precio: $%.2f\n",
+                    producto.getNombre(), producto.getCantidad(), producto.getPrecio());
+        }
+    }
+}
+
+class Producto {
+    private final String nombre;
+    private int cantidad;
+    private final double precio;
+    private final int cantidadInicial;
+
+    public Producto(String nombre, int cantidad, double precio) {
+        this.nombre = nombre;
+        this.cantidad = cantidad;
+        this.precio = precio;
+        this.cantidadInicial = cantidad;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getCantidad() {
+        return cantidad;
+    }
+
+    public double getPrecio() {
+        return precio;
+    }
+
+    public void vender(int cantidadVendida) {
+        if (cantidadVendida <= cantidad) {
+            cantidad -= cantidadVendida;
+        }
+    }
+
+    public void duplicarInventario() {
+        cantidad = cantidadInicial * 2;
+    }
+}
